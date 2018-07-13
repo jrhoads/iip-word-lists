@@ -15,7 +15,7 @@ run_script() {
 		exceptions_flag="--fileexception"
 	fi
 
-	echo "Running Script...";
+	echo "Running Wordlist Script...";
 	../src/python/wordlist.py ../$xml_text_path/* --nodiplomatic --html_general\
 	--plaintext --flat texts/plain $exceptions_flag $new_system_flag;
 	#if [ $new_system == 1 ]; then
@@ -55,20 +55,28 @@ for word in $*; do
 done
 
 reset_docs(){
-	echo "Removing old site...";
+	echo "Removing Old Site...";
 	if [ -d docs ]; then
 		rm -rf docs
 	fi
 	mkdir docs
 }
+provision_toolkits(){
+	echo "Checking/Provisioning NLTK and CLTK toolkits";
+    python ./provision_toolkits.py
+}
 
 process_doubletree(){
 	echo "Processing doubletree-data...";
-	cat docs/texts/plain/* > docs/combined.txt
-	./src/python/per_line.py docs/combined.txt docs/doubletree-data.txt
+    if [ -d docs/texts/plain ]; then
+        cat docs/texts/plain/* > docs/combined.txt
+        ./src/python/per_line.py docs/combined.txt docs/doubletree-data.txt
+    else
+        echo "....no files found"
+    fi
 }
 
-if [ $update == 1 ]; then
+update_texts(){
 	echo "Updating texts...";
 	if [ -d $text_path ]; then
 		cd $text_path;
@@ -86,18 +94,16 @@ if [ $update == 1 ]; then
 		rm include_publicationStmt.xml;
 	fi
 	cd - > /dev/null;
+}
+
+if [ $update == 1 ]; then
+    update_texts;
 fi
 
+provision_toolkits;
 reset_docs;
 copy_static;
 run_script;
 process_doubletree;
 
-#cp src/web/wordlist.css docs/;
-#cp src/web/style.css docs/;
-#cp src/web/index_search.js docs/;
-#cp src/web/doubletree.html docs/;
-#cp -r src/web/doubletreejs docs/;
-#cp src/web/levenshtein.min.js docs/;
-#cp src/web/wordinfo.css docs/;
 
